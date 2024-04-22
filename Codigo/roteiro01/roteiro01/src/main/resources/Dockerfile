@@ -7,8 +7,10 @@ COPY . .
 RUN apt-get install maven -y
 RUN mvn clean install
 
-FROM 
+FROM openjdk:21-jdk-slim
 
-LABEL authors="phmcf"
+EXPOSE 8080
 
-ENTRYPOINT ["top", "-b"]
+COPY --from=BUILD /target/roteiro01-0.0.1-SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
