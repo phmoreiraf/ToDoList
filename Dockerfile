@@ -3,8 +3,13 @@ FROM ubuntu:latest
 
 WORKDIR /app
 
+
 RUN apt-get update
 RUN apt-get install openjdk-21-jdk -y
+
+#RUN apt-get update
+#RUN apt-get install openjdk-17-jdk -y
+
 COPY Codigo/roteiro01/roteiro01/pom.xml .
 COPY Codigo/roteiro01/roteiro01/src/ ./src
 #COPY Codigo/roteiro01/roteiro01/src/main/java .
