@@ -1,4 +1,4 @@
-FROM maven:3.8.1-openjdk-21-slim AS build
+FROM maven:3.8.1-openjdk-17-slim AS build
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN mvn clean package
 #RUN apt-get install maven -y
 #RUN mvn clean install
 
-FROM openjdk:21-jdk-slim
+FROM openjdk:17-jre-slim
 
 EXPOSE 8080
 
