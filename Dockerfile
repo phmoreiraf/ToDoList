@@ -3,7 +3,7 @@ FROM ubuntu:latest AS BUILD
 RUN apt-get update
 RUN apt-get install openjdk-21-jdk -y
 COPY Codigo/roteiro01/roteiro01/src/main/java .
-COPY Codigo/roteiro01/roteiro01/pom.xml .
+COPY Codigo/roteiro01/pom.xml .
 
 RUN apt-get install maven -y
 RUN mvn clean install
