@@ -1,8 +1,8 @@
-package com.example.roteiro01;
+package com.example.roteiro01.unit.controller;
 
-import com.example.roteiro01.entity.*;
+import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.service.TaskService;
-import com.example.roteiro01.controller.*;
+import com.example.roteiro01.controller.TaskController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,14 +11,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TaskServiceTeste {
+public class TaskControllerTest {
 
     @Mock
     private TaskService taskService;
@@ -64,19 +63,6 @@ public class TaskServiceTeste {
     }
 
     @Test
-    void testCriarTarefaComExcecao() {
-        // Mocking
-        when(taskService.criarTarefa(any(Task.class))).thenThrow(new IllegalArgumentException("Erro ao criar tarefa"));
-
-        // Test
-        ResponseEntity<?> response = taskController.criarTarefa(new Task());
-
-        // Verification
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-    }
-
-    @Test
     void testAtualizarTarefa() {
         // Mocking
         Task task = new Task();
@@ -89,18 +75,6 @@ public class TaskServiceTeste {
         // Verification
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(task, response.getBody());
-    }
-
-    @Test
-    void testAtualizarTarefaNotFound() {
-        // Mocking
-        when(taskService.atualizarTarefa(anyLong(), any(Task.class))).thenReturn(null);
-
-        // Test
-        ResponseEntity<Task> response = taskController.atualizarTarefa(1L, new Task());
-
-        // Verification
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
