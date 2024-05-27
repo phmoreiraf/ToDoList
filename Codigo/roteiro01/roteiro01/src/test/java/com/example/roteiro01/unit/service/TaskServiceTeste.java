@@ -102,4 +102,22 @@ public class TaskServiceTeste {
         // Verification
         assertEquals(tasks, result);
     }
+
+    @Test
+    void testConcluirTarefa() {
+        // Mocking
+        Task task = new Task();
+        task.setId(1L);
+        task.setDone(false);  // Adicione esta linha
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        task.setDone(true);
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
+
+        // Test
+        Task result = taskService.concluirTarefa(1L);
+
+        // Verification
+        assertEquals(task, result);
+        assertTrue(result.isDone());
+    }
 }

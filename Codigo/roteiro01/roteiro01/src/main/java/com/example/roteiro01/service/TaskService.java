@@ -66,9 +66,22 @@ public class TaskService {
         return tarefas;
     }
 
+    public Task concluirTarefa(Long id) {
+        Optional<Task> taskOptional = taskRepository.findById(id);
+        if (taskOptional.isPresent()) {
+            Task task = taskOptional.get();
+            task.setDone(true);
+            setTaskStatus(task);
+            return taskRepository.save(task);
+        }
+        return null;
+    }
+
     private void setTaskStatus(Task task) {
         LocalDate currentDate = LocalDate.now();
-        if (task.getType() == TaskType.DATA) {
+        if (task.isDone()) {
+            task.setStatus(TaskStatus.CONCLUIDA);
+        } else if (task.getType() == TaskType.DATA) {
             if (task.getDueDate().isBefore(currentDate)) {
                 task.setStatus(TaskStatus.ATRASADA);
             } else if (task.getDueDate().isEqual(currentDate)) {
