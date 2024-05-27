@@ -100,4 +100,19 @@ public class TaskControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(tasks, response.getBody());
     }
+
+    @Test
+    void testConcluirTarefa() {
+        // Mocking
+        Task task = new Task();
+        task.setId(1L);
+        when(taskService.concluirTarefa(1L)).thenReturn(task);
+
+        // Test
+        ResponseEntity<Task> response = taskController.concluirTarefa(1L);
+
+        // Verification
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(task, response.getBody());
+    }
 }

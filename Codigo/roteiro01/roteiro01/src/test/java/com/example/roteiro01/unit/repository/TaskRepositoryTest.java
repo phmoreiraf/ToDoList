@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@SpringBootTest
 public class TaskRepositoryTest {
 
     @Autowired
@@ -69,5 +71,17 @@ public class TaskRepositoryTest {
         taskRepository.deleteById(1L);
         Optional<Task> task = taskRepository.findById(1L);
         assertFalse(task.isPresent());
+    }
+
+    @Test
+    void testConcluirTarefa() {
+        Optional<Task> task = taskRepository.findById(1L);
+        assertTrue(task.isPresent());
+        task.get().setDone(true);
+        taskRepository.save(task.get());
+
+        Optional<Task> concludedTask = taskRepository.findById(1L);
+        assertTrue(concludedTask.isPresent());
+        assertEquals(true, concludedTask.get().isDone());
     }
 }

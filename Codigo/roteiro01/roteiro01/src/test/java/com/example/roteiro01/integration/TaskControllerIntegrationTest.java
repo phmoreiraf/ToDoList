@@ -64,4 +64,14 @@ public class TaskControllerIntegrationTest {
                 .then()
                 .statusCode(204);
     }
+
+    @Test
+    public void testConcluirTarefa() {
+        given()
+                .contentType("application/json")
+                .when()
+                .put("/api/tasks/1/done")
+                .then()
+                .statusCode(200);
+    }
 }

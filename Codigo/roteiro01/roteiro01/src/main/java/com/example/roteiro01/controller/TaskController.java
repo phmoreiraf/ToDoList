@@ -62,4 +62,14 @@ public class TaskController {
         List<Task> tarefas = taskService.obterTodasTarefas();
         return ResponseEntity.ok(tarefas);
     }
+
+    @PutMapping("/{id}/done")
+    public ResponseEntity<Task> concluirTarefa(@PathVariable Long id) {
+        Task task = taskService.concluirTarefa(id);
+        if (task != null) {
+            return ResponseEntity.ok(task);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

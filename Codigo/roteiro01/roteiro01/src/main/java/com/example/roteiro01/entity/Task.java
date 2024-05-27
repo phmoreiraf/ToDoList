@@ -36,6 +36,8 @@ public class Task {
     private Priority priority; // Nível de prioridade
     private TaskStatus status; // Status da tarefa
 
+    private boolean done;
+
     public Task(String description){
         this.description = description;
     }
@@ -52,5 +54,13 @@ public class Task {
                 ", priority=" + priority +
                 ", status=" + status +
                 '}';
+    }
+
+    public boolean isDone() {
+        return done;
+    }
+
+    public void setDone(boolean done) {
+        this.done = done;
     }
 }
