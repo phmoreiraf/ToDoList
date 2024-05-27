@@ -1,0 +1,35 @@
+@startuml
+title Diagrama de Sequencia referente ao CDU002 - Criar Tarefa
+actor Usuário
+Boundary Frontend
+Boundary SpringBoot
+Control taskController
+Entity Task
+Participant taskService
+Participant taskRepository
+Database TodoList
+activate SpringBoot
+Usuário -> Frontend: Criar Tarefa
+activate Usuário
+activate Frontend
+activate TodoList
+Frontend -> SpringBoot: POST api/tasks/
+group Roteiro01Application [Spring Boot Java Application]
+SpringBoot -> taskController: create(TaskDto)
+activate taskController
+taskController -> taskService: save(taskDto)
+activate taskService
+taskService -> taskRepository: save(taskDto)
+activate taskRepository
+taskRepository -> TodoList: INSERT INTO Tasks (task)
+TodoList --> taskRepository: Task saved
+taskRepository --> taskService: Task saved
+destroy taskRepository
+taskService --> taskController: Task saved
+destroy taskService
+taskController --> SpringBoot: ResponseEntity<Task> ResponseEntity.ok(task)
+destroy taskController
+end
+SpringBoot --> Frontend : ResponseEntity<Task> ResponseEntity.ok(task)
+Frontend --> Usuário: Task created
+@enduml

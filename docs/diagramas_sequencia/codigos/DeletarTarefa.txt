@@ -1,0 +1,35 @@
+@startuml
+title Diagrama de Sequencia referente ao CDU004 - Deletar Tarefa
+actor Usuário
+Boundary Frontend
+Boundary SpringBoot
+Control taskController
+Entity Task
+Participant taskService
+Participant taskRepository
+Database TodoList
+activate SpringBoot
+Usuário -> Frontend: Deletar Tarefa
+activate Usuário
+activate Frontend
+activate TodoList
+Frontend -> SpringBoot: DELETE api/tasks/{id}
+group Roteiro01Application [Spring Boot Java Application]
+SpringBoot -> taskController: delete(id)
+activate taskController
+taskController -> taskService: deleteById(id)
+activate taskService
+taskService -> taskRepository: deleteById(id)
+activate taskRepository
+taskRepository -> TodoList: DELETE FROM Tasks WHERE id = {id}
+TodoList --> taskRepository: Task deleted
+taskRepository --> taskService: Task deleted
+destroy taskRepository
+taskService --> taskController: Task deleted
+destroy taskService
+taskController --> SpringBoot: ResponseEntity.ok().build()
+destroy taskController
+end
+SpringBoot --> Frontend : ResponseEntity.ok().build()
+Frontend --> Usuário: Task deleted
+@enduml

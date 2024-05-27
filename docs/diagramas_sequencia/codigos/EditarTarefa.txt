@@ -1,0 +1,45 @@
+@startuml
+title Diagrama de Sequencia referente ao CDU003 - Editar Tarefa
+actor Usuário
+Boundary Frontend
+Boundary SpringBoot
+Control taskController
+Entity Task
+Participant taskService
+Participant taskRepository
+Database TodoList
+activate SpringBoot
+Usuário -> Frontend: Editar Tarefa
+activate Usuário
+activate Frontend
+activate TodoList
+Frontend -> SpringBoot: PUT api/tasks/{id}
+group Roteiro01Application [Spring Boot Java Application]
+SpringBoot -> taskController: update(TaskDto, id)
+activate taskController
+taskController -> taskService: findById(id)
+activate taskService
+taskService -> taskRepository: findById(id)
+activate taskRepository
+taskRepository -> TodoList: SELECT * FROM Tasks WHERE id = {id}
+TodoList --> taskRepository: Task found
+taskRepository --> taskService: Task found
+destroy taskRepository
+taskService --> taskController: Task found
+destroy taskService
+taskController -> taskService: save(taskDto)
+activate taskService
+taskService -> taskRepository: save(taskDto)
+activate taskRepository
+taskRepository -> TodoList: UPDATE Tasks SET task = {task} WHERE id = {id}
+TodoList --> taskRepository: Task updated
+taskRepository --> taskService: Task updated
+destroy taskRepository
+taskService --> taskController: Task updated
+destroy taskService
+taskController --> SpringBoot: ResponseEntity<Task> ResponseEntity.ok(task)
+destroy taskController
+end
+SpringBoot --> Frontend : ResponseEntity<Task> ResponseEntity.ok(task)
+Frontend --> Usuário: Task updated
+@enduml
