@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const TaskForm = ({ onAddTask }) => {
+const TaskForm = ({ onAddTask, initialTask }) => {
     const [description, setDescription] = useState('');
     const [type, setType] = useState('DATA');
     const [priority, setPriority] = useState('ALTA');
     const [dueDate, setDueDate] = useState('');
     const [dueDays, setDueDays] = useState('');
+
+    useEffect(() => {
+        if(initialTask) {
+            setDescription(initialTask.description);
+            setType(initialTask.type);
+            setPriority(initialTask.priority);
+            setDueDate(initialTask.dueDate);
+            setDueDays(initialTask.dueDays);
+        }
+    }, [initialTask]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -17,7 +27,7 @@ const TaskForm = ({ onAddTask }) => {
             dueDays: type === 'PRAZO' ? dueDays : null,
             completed: false,
         };
-        onAddTask(newTask);
+        onAddTask(newTask, initialTask);
         // Reset form fields
         setDescription('');
         setType('DATA');
@@ -60,7 +70,7 @@ const TaskForm = ({ onAddTask }) => {
                     <option value="BAIXA">Baixa</option>
                 </select>
             </label>
-            <button type="submit">Adicionar Tarefa</button>
+            <button type="submit">{initialTask ? 'Editar Tarefa' : 'Adicionar Tarefa'}</button>
         </form>
     );
 };

@@ -2,10 +2,10 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #1b1b1b;
-    /* Fundo preto */
-    color: #ffffff;
-    /* Texto branco */
+    background-color: #f0f0f0;
+    /* Fundo cinza claro */
+    color: #333333;
+    /* Texto cinza escuro */
     margin: 0;
     padding: 0;
     display: flex;
@@ -17,13 +17,14 @@ body {
 .App {
     width: 80%;
     max-width: 800px;
-    background-color: #2c2c2c;
-    /* Fundo cinza escuro */
+    background-color: #ffffff;
+    /* Fundo branco */
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    /* Sombra mais suave */
     overflow: hidden;
-    padding: 20px;
-    /* Adicionado padding para espaçamento interno */
+    padding: 40px;
+    /* Maior padding para espaçamento interno */
 }
 
 
@@ -40,22 +41,24 @@ body {
 }
 
 h2 {
-    border-bottom: 1px solid #ffffff;
-    /* Linha de separação branca */
+    border-bottom: 1px solid #cccccc;
+    /* Linha de separação cinza */
     padding-bottom: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    /* Maior margem inferior */
 }
 
 
 /* Botões */
 
 button {
-    background-color: #000000;
-    /* Fundo preto */
+    background-color: #007bff;
+    /* Fundo azul */
     color: #ffffff;
     /* Texto branco */
     border: none;
-    padding: 10px;
+    padding: 15px;
+    /* Maior padding para botões maiores */
     cursor: pointer;
     border-radius: 5px;
     /* Bordas arredondadas */
@@ -63,8 +66,8 @@ button {
 }
 
 button:hover {
-    background-color: #444444;
-    /* Cinza escuro ao passar o mouse */
+    background-color: #0056b3;
+    /* Azul escuro ao passar o mouse */
 }
 
 button:focus {
@@ -72,7 +75,7 @@ button:focus {
 }
 
 button.delete {
-    background-color: #e74c3c;
+    background-color: #dc3545;
     /* Fundo vermelho */
     color: #ffffff;
     /* Texto branco */
@@ -82,12 +85,12 @@ button.delete {
 }
 
 button.delete:hover {
-    background-color: #c0392b;
+    background-color: #c82333;
     /* Vermelho escuro ao passar o mouse */
 }
 
 button.complete {
-    background-color: #27ae60;
+    background-color: #28a745;
     /* Fundo verde */
     color: #ffffff;
     /* Texto branco */
@@ -96,7 +99,7 @@ button.complete {
 }
 
 button.complete:hover {
-    background-color: #229954;
+    background-color: #218838;
     /* Verde escuro ao passar o mouse */
 }
 
@@ -107,12 +110,13 @@ button.complete:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #333333;
+    background-color: #f8f9fa;
     /* Fundo cinza mais claro */
-    padding: 10px;
+    padding: 20px;
+    /* Maior padding para tarefas maiores */
     border-radius: 5px;
-    margin-bottom: 20px;
-    /* Aumentado o espaçamento entre tarefas */
+    margin-bottom: 30px;
+    /* Maior margem inferior */
     transition: background-color 0.3s ease;
     flex-wrap: wrap;
     /* Permitir que os elementos sejam quebrados em várias linhas se necessário */
@@ -128,12 +132,12 @@ button.complete:hover {
 
 .task-buttons {
     display: flex;
-    gap: 10px;
-    /* Espaçamento entre os botões */
+    gap: 20px;
+    /* Maior espaçamento entre os botões */
 }
 
 .task.completed {
-    background-color: #27ae60;
+    background-color: #28a745;
     /* Verde para completadas */
     text-decoration: line-through;
 }
@@ -144,18 +148,18 @@ button.complete:hover {
 form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    /* Aumentado gap para mais espaçamento */
-    padding: 20px;
-    /* Adicionado padding para espaçamento interno */
+    gap: 30px;
+    /* Maior gap para mais espaçamento */
+    padding: 30px;
+    /* Maior padding para espaçamento interno */
 }
 
 label {
     display: flex;
     flex-direction: column;
     font-weight: bold;
-    margin-bottom: 10px;
-    /* Aumentado o espaçamento entre labels */
+    margin-bottom: 15px;
+    /* Maior espaçamento entre labels */
 }
 
 input[type="text"],
@@ -163,14 +167,33 @@ input[type="date"],
 input[type="number"],
 select {
     padding: 10px;
-    border: 1px solid #ffffff;
-    /* Borda branca */
+    border: 1px solid #000000;
+    /* Borda preta */
     border-radius: 5px;
-    margin-top: 5px;
-    background-color: #444444;
-    /* Fundo cinza escuro */
-    color: #ffffff;
-    /* Texto branco */
+    background-color: #f8f9fa;
+    /* Fundo cinza mais claro */
+    color: #333333;
+    /* Texto cinza escuro */
+    font-size: 16px;
+    /* Tamanho da fonte maior */
+}
+
+
+/* Remove o seta do input date no Firefox */
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    display: none;
+}
+
+
+/* Remove o seta do input date no Chrome e Safari */
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type="text"]:focus,
@@ -178,7 +201,7 @@ input[type="date"]:focus,
 input[type="number"]:focus,
 select:focus {
     outline: none;
-    border: 1px solid #3498db;
+    border: 1px solid #007bff;
     /* Borda azul */
 }
 
@@ -187,17 +210,17 @@ form button {
 }
 
 form button[type="submit"] {
-    background-color: #000000;
-    /* Fundo preto */
+    background-color: #007bff;
+    /* Fundo azul */
     color: #ffffff;
     /* Texto branco */
-    padding: 10px 20px;
-    /* Adicionado padding para espaçamento interno */
+    padding: 15px 30px;
+    /* Maior padding para botão maior */
     border-radius: 5px;
     /* Bordas arredondadas */
 }
 
 form button[type="submit"]:hover {
-    background-color: #444444;
-    /* Cinza escuro ao passar o mouse */
+    background-color: #0056b3;
+    /* Azul escuro ao passar o mouse */
 }
