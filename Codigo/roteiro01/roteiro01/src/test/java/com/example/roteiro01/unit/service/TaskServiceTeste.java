@@ -34,7 +34,7 @@ public class TaskServiceTeste {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setCompleted(false);  // Adicione esta linha
+        task.setFinalizado(false);  // Adicione esta linha
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         // Test
@@ -49,7 +49,7 @@ public class TaskServiceTeste {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setCompleted(false);  // Adicione esta linha
+        task.setFinalizado(false);  // Adicione esta linha
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
         // Test
@@ -64,7 +64,7 @@ public class TaskServiceTeste {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setCompleted(false);  // Adicione esta linha
+        task.setFinalizado(false);  // Adicione esta linha
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
