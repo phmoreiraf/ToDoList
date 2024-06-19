@@ -2,80 +2,98 @@ package com.example.roteiro01.integration;
 
 import com.example.roteiro01.Roteiro01Application;
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
+
+@ExtendWith(MockitoExtension.class)
+@RunWith(JUnitPlatform.class)
 @SpringBootTest(classes = { Roteiro01Application.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-// @RunWith(SpringRunner.class)
 public class TaskControllerIntegrationTest {
 
-    @BeforeEach
+    @Before
     public void setup() {
-        RestAssured.baseURI = "http://localhost";
+        RestAssured.baseURI = "http://localhost:8080";
         RestAssured.port = 8080;
     }
 
     @Test
-    public void testObterTodasTarefas() {
-        get("/api/tasks").then().statusCode(200);
+    public void listAllTasks_whenTasksExist_thenCorrect() {
+        get("/api/task").then().statusCode(200);
     }
 
     @Test
-    public void testObterTarefaPorId() {
-        get("/api/tasks/1").then().statusCode(200)
-                .assertThat().body("description",
-                        equalTo("Primeira tarefa"));
-    }
+    public void createDataTask_whenValidRequest_thenCorrect() {
+        String requestData = """
+            {
+                "descricao": "Task Data",
+                "prioridade": "ALTA",
+                "diaPlanejado": "2024-06-01"
+            }
+            """;
 
-    @Test
-    public void testCriarTarefa() {
-        given()
-                .contentType("application/json")
-                .body("{\"description\": \"Nova tarefa\"}")
+        given().contentType("application/json")
+                .body(requestData)
                 .when()
-                .post("/api/tasks")
+                .post("/api/task/create/data")
                 .then()
-                .statusCode(201);
+                .statusCode(201)
+                .body("descricao", equalTo("Task Data"))
+                .body("prioridade", equalTo("ALTA"))
+                .body("diaPlanejado", equalTo("2024-06-01"));
     }
 
     @Test
-    public void testAtualizarTarefa() {
-        given()
-                .contentType("application/json")
-                .body("{\"description\": \"Tarefa atualizada\"}")
+    public void createPrazoTask_whenValidRequest_thenCorrect() {
+        String requestPrazo = """
+            {
+                "descricao": "Task Prazo",
+                "prioridade": "MEDIA",
+                "diasPlanejados": 15
+            }
+            """;
+
+        given().contentType("application/json")
+                .body(requestPrazo)
                 .when()
-                .put("/api/tasks/1")
+                .post("/api/task/create/prazo")
                 .then()
-                .statusCode(200);
+                .statusCode(201)
+                .body("descricao", equalTo("Task Prazo"))
+                .body("prioridade", equalTo("MEDIA"))
+                .body("diasPlanejados", equalTo(15));
     }
 
     @Test
-    public void testDeletarTarefa() {
-        given()
-                .contentType("application/json")
+    public void markTaskAsCompleted_whenExistingId_thenCorrect() {
+        Long taskId = 1L;
+
+        given().pathParam("id", taskId)
                 .when()
-                .delete("/api/tasks/1")
+                .patch("/api/task/{id}")
                 .then()
-                .statusCode(204);
+                .statusCode(200)
+                .body("completed", equalTo(true))
+                .body("id", equalTo(taskId.intValue()));
     }
 
     @Test
-    public void testConcluirTarefa() {
-        given()
-                .contentType("application/json")
+    public void deleteTask_whenExistingId_thenSuccess() {
+        Long taskId = 1L;
+
+        given().pathParam("id", taskId)
                 .when()
-                .put("/api/tasks/1L/done")
+                .delete("/api/task/{id}")
                 .then()
                 .statusCode(200);
     }

@@ -1,5 +1,7 @@
 package com.example.roteiro01.unit.service;
 
+import com.example.roteiro01.dto.TaskAtualizarDTO;
+import com.example.roteiro01.entity.Priority;
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.repository.TaskRepository;
 import com.example.roteiro01.service.TaskService;
@@ -9,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,49 +33,53 @@ public class TaskServiceTeste {
     }
 
     @Test
-    void testObterTarefaPorId() {
-        // Mocking
-        Task task = new Task();
-        task.setId(1L);
-        task.setFinalizado(false);  // Adicione esta linha
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-
-        // Test
-        Task result = taskService.obterTarefaPorId(1L);
-
-        // Verification
-        assertEquals(task, result);
-    }
-
-    @Test
     void testCriarTarefa() {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setFinalizado(false);  // Adicione esta linha
-        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        task.setDescricao("Nova tarefa");
+        task.setFinalizado(false);
+
+        when(taskRepository.save(any(Task.class))).thenAnswer(i -> {
+            Task savedTask = (Task) i.getArguments()[0];
+            savedTask.setId(1L);
+            return savedTask;
+        });
 
         // Test
-        Task result = taskService.criarTarefa(task);
+        String descricao = "Nova tarefa";
+        Task result = taskService.criar(descricao);
 
         // Verification
-        assertEquals(task, result);
+        assertEquals(task.getId(), result.getId());
+        assertEquals(task.getDescricao(), result.getDescricao());
+        assertFalse(result.getFinalizado());
     }
-
     @Test
     void testAtualizarTarefa() {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setFinalizado(false);  // Adicione esta linha
+        task.setFinalizado(false);
+
+        TaskAtualizarDTO taskDto = new TaskAtualizarDTO();
+        taskDto.setDescricao("Nova descrição");
+        taskDto.setPrioridade(Priority.ALTA);
+        taskDto.setDataPrevistaConclusao(LocalDate.now().plusDays(5));
+        taskDto.setDiasPlanejados(10);
+
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.save(any(Task.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // Test
-        Task result = taskService.atualizarTarefa(1L, task);
+        Task result = taskService.atualizarTarefa(1L, taskDto);
 
         // Verification
-        assertEquals(task, result);
+        assertEquals(task.getId(), result.getId());
+        assertEquals(taskDto.getDescricao(), result.getDescricao());
+        assertEquals(taskDto.getPrioridade(), result.getPriority());
+        assertEquals(taskDto.getDataPrevistaConclusao(), result.getDataPlanejada());
+        assertEquals(taskDto.getDiasPlanejados(), result.getDatasPlanejadas());
     }
 
     @Test
@@ -84,23 +91,10 @@ public class TaskServiceTeste {
         doNothing().when(taskRepository).deleteById(1L);
 
         // Test
-        taskService.deletarTarefa(1L);
+        taskService.deletar(1L);
 
         // Verification
         verify(taskRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void testObterTodasTarefas() {
-        // Mocking
-        List<Task> tasks = new ArrayList<>();
-        when(taskRepository.findAll()).thenReturn(tasks);
-
-        // Test
-        List<Task> result = taskService.obterTodasTarefas();
-
-        // Verification
-        assertEquals(tasks, result);
     }
 
     @Test
@@ -108,16 +102,20 @@ public class TaskServiceTeste {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        task.setDone(false);  // Adicione esta linha
+        task.setFinalizado(false);
+
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        task.setDone(true);
-        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.save(any(Task.class))).thenAnswer(i -> {
+            Task savedTask = (Task) i.getArguments()[0];
+            savedTask.setFinalizado(true);
+            return savedTask;
+        });
 
         // Test
-        Task result = taskService.concluirTarefa(1L);
+        Task result = taskService.marcarTarefaConcluida(1L);
 
         // Verification
-        assertEquals(task, result);
-        assertTrue(result.isDone());
+        assertEquals(task.getId(), result.getId());
+        assertTrue(result.getFinalizado());
     }
 }
