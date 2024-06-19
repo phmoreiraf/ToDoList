@@ -1,7 +1,6 @@
 package com.example.roteiro01.dto;
 
 import com.example.roteiro01.entity.Priority;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
