@@ -2,16 +2,21 @@ package com.example.roteiro01.unit.repository;
 
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.repository.TaskRepository;
+import com.example.roteiro01.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 //@DataJpaTest
 @SpringBootTest
@@ -19,6 +24,9 @@ public class TaskRepositoryTest {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @InjectMocks
+    private TaskService taskService;
 
     @BeforeEach
     void setUp() {
