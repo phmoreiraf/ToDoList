@@ -1,102 +1,101 @@
 package com.example.roteiro01.service;
 
+import com.example.roteiro01.dto.TaskAtualizarDTO;
+import com.example.roteiro01.dto.TaskCriarDataDTO;
+import com.example.roteiro01.dto.TaskCriarPrazoDTO;
 import com.example.roteiro01.entity.Task;
-import com.example.roteiro01.entity.TaskStatus;
 import com.example.roteiro01.entity.TaskType;
 import com.example.roteiro01.repository.TaskRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class TaskService {
 
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
 
-    public Task obterTarefaPorId(Long id) {
-        Optional<Task> taskOptional = taskRepository.findById(id);
-        if (taskOptional.isPresent()) {
-            Task task = taskOptional.get();
-            setTaskStatus(task);
-            return task;
-        }
-        return null;
+    @Operation(summary = "Lista todas as tarefas da lista")
+    public List<Task> findAll() {
+        return taskRepository.findAll();
     }
 
-    public Task criarTarefa(Task tarefa) {
-        if (tarefa.getType() == TaskType.DATA && tarefa.getDueDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("A data de vencimento para tarefas do tipo 'Data' deve ser igual ou após a data atual.");
-        }
-        setTaskStatus(tarefa);
-        return taskRepository.save(tarefa);
+    @Operation(summary = "Cria uma nova tarefa passando somente a descrição")
+    public Task criar(String descricao) {
+        Task novaTask = new Task(descricao);
+        return taskRepository.save(novaTask);
     }
 
-    public Task atualizarTarefa(Long id, Task tarefaAtualizada) {
-        Optional<Task> tarefaOptional = taskRepository.findById(id);
-        if (tarefaOptional.isPresent()) {
-            Task tarefaExistente = tarefaOptional.get();
-            // Atualizar propriedades comuns
-            tarefaExistente.setDescription(tarefaAtualizada.getDescription());
-            tarefaExistente.setCompleted(tarefaAtualizada.getCompleted());
-            // Atualizar propriedades específicas do tipo
-            tarefaExistente.setType(tarefaAtualizada.getType());
-            tarefaExistente.setDeadlineInDays(tarefaAtualizada.getDeadlineInDays());
-            tarefaExistente.setDueDate(tarefaAtualizada.getDueDate());
-            tarefaExistente.setPriority(tarefaAtualizada.getPriority());
-            setTaskStatus(tarefaExistente); // Atualizar status
-            return taskRepository.save(tarefaExistente);
-        } else {
-            return null;
+    @Operation(summary = "Cria uma nova tarefa do tipoTask DATA, recebendo os dados do TaskCreateDataDTO")
+    public Task criarDataTask(TaskCriarDataDTO taskDto) {
+        if (taskDto.getDescricao() == null || taskDto.getDescricao().isEmpty()) {
+            throw new IllegalArgumentException("A descrição da tarefa é obrigatória");
         }
+
+        LocalDate dataPlanejada = taskDto.getDataPrevistaConclusao();
+        if (dataPlanejada == null || dataPlanejada.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("A data prevista de conclusão deve ser no presente ou no futuro");
+        }
+
+        Task novaTask = new Task(taskDto.getDescricao(), TaskType.DATA, taskDto.getPrioridade(), dataPlanejada);
+
+        return taskRepository.save(novaTask);
     }
 
-    public void deletarTarefa(Long id) {
+    @Operation(summary = "Cria uma nova tarefa do tipoTask PRAZO, recebendo os dados do TaskCreatePrazoDTO")
+    public Task criarPrazoTask(TaskCriarPrazoDTO taskDto) {
+        if (taskDto.getDescricao() == null || taskDto.getDescricao().isEmpty()) {
+            throw new IllegalArgumentException("A descrição da tarefa é obrigatória");
+        }
+
+        Integer plannedDays = taskDto.getDiasPlanejados();
+        if (plannedDays == null || plannedDays <= 0) {
+            throw new IllegalArgumentException("O prazo previsto de conclusão deve ser um número positivo");
+        }
+
+        Task novaTask = new Task(taskDto.getDescricao(), TaskType.PRAZO, taskDto.getPrioridade(), plannedDays);
+
+        return taskRepository.save(novaTask);
+    }
+
+    @Operation(summary = "Atualiza uma tarefa existente")
+    public Task atualizarTarefa(Long id, TaskAtualizarDTO taskDto) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
+
+        if (taskDto.getDescricao() != null && !taskDto.getDescricao().isEmpty()) {
+            task.setDescricao(taskDto.getDescricao());
+        }
+
+        if (taskDto.getDataPrevistaConclusao() != null && !taskDto.getDataPrevistaConclusao().isBefore(LocalDate.now())) {
+            task.setDataPlanejada(taskDto.getDataPrevistaConclusao());
+        }
+
+        if (taskDto.getPrioridade() != null) {
+            task.setPriority(taskDto.getPrioridade());
+        }
+
+        if (taskDto.getDiasPlanejados() != null && taskDto.getDiasPlanejados() > 0) {
+            task.setDatasPlanejadas(taskDto.getDiasPlanejados());
+        }
+
+        return taskRepository.save(task);
+    }
+
+    @Operation(summary = "Marca uma tarefa, cuja ID foi passada, como concluída")
+    public Task marcarTarefaConcluida(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
+        task.setFinalizado(true);
+        return taskRepository.save(task);
+    }
+
+    @Operation(summary = "Deleta a tarefa de acordo com o ID passado")
+    public void deletar(Long id) {
         taskRepository.deleteById(id);
-    }
-
-    public List<Task> obterTodasTarefas() {
-        List<Task> tarefas = taskRepository.findAll();
-        for (Task task : tarefas) {
-            setTaskStatus(task);
-        }
-        return tarefas;
-    }
-
-    public Task concluirTarefa(Long id) {
-        Optional<Task> taskOptional = taskRepository.findById(id);
-        if (taskOptional.isPresent()) {
-            Task task = taskOptional.get();
-            task.setDone(true);
-            setTaskStatus(task);
-            return taskRepository.save(task);
-        }
-        return null;
-    }
-
-    private void setTaskStatus(Task task) {
-        LocalDate currentDate = LocalDate.now();
-        if (task.isDone()) {
-            task.setStatus(TaskStatus.CONCLUIDA);
-        } else if (task.getType() == TaskType.DATA) {
-            if (task.getDueDate().isBefore(currentDate)) {
-                task.setStatus(TaskStatus.ATRASADA);
-            } else if (task.getDueDate().isEqual(currentDate)) {
-                task.setStatus(TaskStatus.PREVISTA);
-            } else {
-                task.setStatus(TaskStatus.CONCLUIDA);
-            }
-        } else if (task.getType() == TaskType.PRAZO) {
-            // Lógica similar para tarefas do tipo Prazo
-        } else {
-            if (task.getCompleted()) {
-                task.setStatus(TaskStatus.CONCLUIDA);
-            } else {
-                task.setStatus(TaskStatus.PREVISTA);
-            }
-        }
     }
 }

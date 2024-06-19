@@ -1,8 +1,10 @@
 package com.example.roteiro01.unit.controller;
 
+import com.example.roteiro01.controller.TaskController;
+import com.example.roteiro01.dto.TaskAtualizarDTO;
+import com.example.roteiro01.dto.TaskCriarDTO;
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.service.TaskService;
-import com.example.roteiro01.controller.TaskController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -10,12 +12,16 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 public class TaskControllerTest {
 
@@ -31,34 +37,33 @@ public class TaskControllerTest {
     }
 
     @Test
-    void testObterTarefa() {
+    void testListAll() {
         // Mocking
-        Task task = new Task();
-        task.setId(1L);
-        when(taskService.obterTarefaPorId(1L)).thenReturn(task);
+        List<Task> tasks = new ArrayList<>();
+        when(taskService.findAll()).thenReturn(tasks);
 
         // Test
-        ResponseEntity<Task> response = taskController.obterTarefa(1L);
+        ResponseEntity<List<Task>> response = taskController.listAll();
 
         // Verification
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(task, response.getBody());
+        assertEquals(tasks, response.getBody());
     }
 
     @Test
-    void testCriarTarefa() {
+    void testCriar() {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        when(taskService.criarTarefa(any(Task.class))).thenReturn(task);
+        when(taskService.criar(any(String.class))).thenReturn(task);
 
         // Test
-        ResponseEntity<?> response = taskController.criarTarefa(task);
+        TaskCriarDTO taskDto = new TaskCriarDTO();
+        taskDto.setDescricao("Nova tarefa");
+        ResponseEntity<Task> response = taskController.criar(taskDto);
 
         // Verification
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertTrue(response.getHeaders().containsKey("Location"));
-        assertEquals("/tasks/1", response.getHeaders().getLocation().getPath());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(task, response.getBody());
     }
 
@@ -67,10 +72,11 @@ public class TaskControllerTest {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        when(taskService.atualizarTarefa(1L, task)).thenReturn(task);
+        TaskAtualizarDTO taskDto = new TaskAtualizarDTO();
+        when(taskService.atualizarTarefa(eq(1L), any(TaskAtualizarDTO.class))).thenReturn(task);
 
         // Test
-        ResponseEntity<Task> response = taskController.atualizarTarefa(1L, task);
+        ResponseEntity<Task> response = taskController.atualizarTarefa(1L, taskDto);
 
         // Verification
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -78,38 +84,22 @@ public class TaskControllerTest {
     }
 
     @Test
-    void testDeletarTarefa() {
+    void testDeletar() {
         // Test
-        ResponseEntity<Void> response = taskController.deletarTarefa(1L);
+        taskController.deletar(1L);
 
         // Verification
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(taskService, times(1)).deletarTarefa(1L);
+        verify(taskService, times(1)).deletar(1L);
     }
-
     @Test
-    void testObterTodasTarefas() {
-        // Mocking
-        List<Task> tasks = new ArrayList<>();
-        when(taskService.obterTodasTarefas()).thenReturn(tasks);
-
-        // Test
-        ResponseEntity<List<Task>> response = taskController.obterTodasTarefas();
-
-        // Verification
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(tasks, response.getBody());
-    }
-
-    @Test
-    void testConcluirTarefa() {
+    void testMarcarTarefaConcluida() {
         // Mocking
         Task task = new Task();
         task.setId(1L);
-        when(taskService.concluirTarefa(1L)).thenReturn(task);
+        when(taskService.marcarTarefaConcluida(1L)).thenReturn(task);
 
         // Test
-        ResponseEntity<Task> response = taskController.concluirTarefa(1L);
+        ResponseEntity<Task> response = taskController.marcarTarefaConcluida(1L);
 
         // Verification
         assertEquals(HttpStatus.OK, response.getStatusCode());
