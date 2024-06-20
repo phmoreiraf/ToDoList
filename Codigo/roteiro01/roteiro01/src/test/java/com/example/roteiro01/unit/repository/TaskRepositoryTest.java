@@ -7,10 +7,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import static org.mockito.ArgumentMatchers.any;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-//@DataJpaTest
-@SpringBootTest
+@DataJpaTest
 public class TaskRepositoryTest {
 
     @Autowired
@@ -34,6 +37,8 @@ public class TaskRepositoryTest {
         task.setId(1L);
         task.setDescricao("Tarefa 1");
         taskRepository.save(task);
+
+        taskService = Mockito.spy(new TaskService(taskRepository));
     }
 
     @Test
@@ -47,7 +52,7 @@ public class TaskRepositoryTest {
     void testObterTodasTarefas() {
         List<Task> tasks = taskRepository.findAll();
         assertFalse(tasks.isEmpty());
-        assertEquals(1, tasks.size());
+        assertEquals(3, tasks.size());
     }
 
     @Test
@@ -83,18 +88,6 @@ public class TaskRepositoryTest {
 
     @Test
     void testConcluirTarefa() {
-        // Mocking
-        Task task = new Task();
-        task.setId(1L);
-        task.setFinalizado(false);
-
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskRepository.save(any(Task.class))).thenAnswer(i -> {
-            Task savedTask = (Task) i.getArguments()[0];
-            savedTask.setFinalizado(true);
-            return savedTask;
-        });
-
         // Test
         Task result = taskService.marcarTarefaConcluida(1L);
 

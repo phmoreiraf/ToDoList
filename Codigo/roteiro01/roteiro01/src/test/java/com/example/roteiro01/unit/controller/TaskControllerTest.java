@@ -40,6 +40,16 @@ public class TaskControllerTest {
     void testListAll() {
         // Mocking
         List<Task> tasks = new ArrayList<>();
+        Task task1 = new Task();
+        task1.setId(1L);
+        task1.setDescricao("Tarefa 1");
+        tasks.add(task1);
+
+        Task task2 = new Task();
+        task2.setId(2L);
+        task2.setDescricao("Tarefa 2");
+        tasks.add(task2);
+
         when(taskService.findAll()).thenReturn(tasks);
 
         // Test
@@ -63,7 +73,7 @@ public class TaskControllerTest {
         ResponseEntity<Task> response = taskController.criar(taskDto);
 
         // Verification
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(task, response.getBody());
     }
 
