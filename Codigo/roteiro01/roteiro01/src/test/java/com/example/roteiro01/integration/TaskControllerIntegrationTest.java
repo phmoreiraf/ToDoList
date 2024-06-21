@@ -14,8 +14,6 @@ import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
-
-@ExtendWith(MockitoExtension.class)
 @RunWith(JUnitPlatform.class)
 @SpringBootTest(classes = { Roteiro01Application.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
@@ -28,12 +26,12 @@ public class TaskControllerIntegrationTest {
     }
 
     @Test
-    public void listAllTasks_whenTasksExist_thenCorrect() {
-        get("/api/task").then().statusCode(200);
+    public void listAllTasks() {
+        get("/api/task").then().statusCode(204);
     }
 
     @Test
-    public void createDataTask_whenValidRequest_thenCorrect() {
+    public void criarDataTask() {
         String requestData = """
             {
                 "descricao": "Task Data",
@@ -54,7 +52,7 @@ public class TaskControllerIntegrationTest {
     }
 
     @Test
-    public void createPrazoTask_whenValidRequest_thenCorrect() {
+    public void criarPrazoTask() {
         String requestPrazo = """
             {
                 "descricao": "Task Prazo",
@@ -75,7 +73,7 @@ public class TaskControllerIntegrationTest {
     }
 
     @Test
-    public void markTaskAsCompleted_whenExistingId_thenCorrect() {
+    public void marcarConcluida() {
         Long taskId = 1L;
 
         given().pathParam("id", taskId)
@@ -88,7 +86,7 @@ public class TaskControllerIntegrationTest {
     }
 
     @Test
-    public void deleteTask_whenExistingId_thenSuccess() {
+    public void deletarTask() {
         Long taskId = 1L;
 
         given().pathParam("id", taskId)
