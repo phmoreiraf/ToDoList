@@ -14,18 +14,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/task")
 @RequiredArgsConstructor
+@EnableWebMvc
 public class TaskController {
 
-    private final TaskService taskService;
+    public TaskService taskService;
 
+    @Operation(description = "Lista todas as tarefas da lista")
     @GetMapping()
-    @Operation(summary = "Lista todas as tarefas da lista")
     public ResponseEntity<List<Task>> listAll() {
         try {
             List<Task> taskList = new ArrayList<Task>();
@@ -39,8 +42,8 @@ public class TaskController {
         }
     }
 
+    @Operation(description = "Cria uma nova tarefa passando somente a descrição")
     @PostMapping()
-    @Operation(summary = "Cria uma nova tarefa passando somente a descrição")
     public ResponseEntity<Task> criar(@RequestBody TaskCriarDTO taskDto) {
         try {
             Task taskCriada = taskService.criar(taskDto.getDescricao());
@@ -70,8 +73,8 @@ public class TaskController {
         }
     }
 
+    @Operation(description = "Marca a tarefa, cuja ID foi passado, como concluída")
     @PatchMapping("/{id}")
-    @Operation(summary = "Marca a tarefa, cuja ID foi passado, como concluída")
     public ResponseEntity<Task> marcarTarefaConcluida(@PathVariable Long id) {
         try {
             Task updatedTask = taskService.marcarTarefaConcluida(id);
@@ -83,8 +86,8 @@ public class TaskController {
         }
     }
 
+    @Operation(description =  "Atualiza uma tarefa existente")
     @PutMapping("/{id}")
-    @Operation(summary = "Atualiza uma tarefa existente")
     public ResponseEntity<Task> atualizarTarefa(@PathVariable Long id, @Valid @RequestBody TaskAtualizarDTO taskDto) {
         try {
             Task updatedTask = taskService.atualizarTarefa(id, taskDto);
@@ -96,8 +99,8 @@ public class TaskController {
         }
     }
 
+    @Operation(description = "Deleta a tarefa, cuja ID foi passado")
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deleta a tarefa, cuja ID foi passado")
     public void deletar(@PathVariable Long id) {
         try {
             taskService.deletar(id);
