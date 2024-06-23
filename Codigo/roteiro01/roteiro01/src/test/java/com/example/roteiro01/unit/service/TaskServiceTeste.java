@@ -1,20 +1,18 @@
 package com.example.roteiro01.unit.service;
 
-import com.example.roteiro01.dto.TaskAtualizarDTO;
-import com.example.roteiro01.entity.Priority;
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.repository.TaskRepository;
-import com.example.roteiro01.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
+import com.example.roteiro01.service.TaskService;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class TaskServiceTeste {
@@ -31,89 +29,104 @@ public class TaskServiceTeste {
     }
 
     @Test
-    void testCriarTarefa() {
-        // Mocking
-        Task task = new Task();
-        task.setId(1L);
-        task.setDescricao("Nova tarefa");
-        task.setFinalizado(false);
+    public void testListAllTasks() {
+        Task task1 = new Task();
+        task1.setDescription("Test Task 1");
+        Task task2 = new Task();
+        task2.setDescription("Test Task 2");
 
-        when(taskRepository.save(any(Task.class))).thenAnswer(i -> {
-            Task savedTask = (Task) i.getArguments()[0];
-            savedTask.setId(1L);
-            return savedTask;
-        });
+        when(taskRepository.findAll()).thenReturn(Arrays.asList(task1, task2));
 
-        // Test
-        String descricao = "Nova tarefa";
-        Task result = taskService.criar(descricao);
-
-        // Verification
-        assertEquals(task.getId(), result.getId());
-        assertEquals(task.getDescricao(), result.getDescricao());
-        assertFalse(result.getFinalizado());
-    }
-    @Test
-    void testAtualizarTarefa() {
-        // Mocking
-        Task task = new Task();
-        task.setId(1L);
-        task.setFinalizado(false);
-
-        TaskAtualizarDTO taskDto = new TaskAtualizarDTO();
-        taskDto.setDescricao("Nova descrição");
-        taskDto.setPrioridade(Priority.ALTA);
-        taskDto.setDataPrevistaConclusao(LocalDate.now().plusDays(5));
-        taskDto.setDiasPlanejados(10);
-
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskRepository.save(any(Task.class))).thenAnswer(i -> i.getArguments()[0]);
-
-        // Test
-        Task result = taskService.atualizarTarefa(1L, taskDto);
-
-        // Verification
-        assertEquals(task.getId(), result.getId());
-        assertEquals(taskDto.getDescricao(), result.getDescricao());
-        assertEquals(taskDto.getPrioridade(), result.getPriority());
-        assertEquals(taskDto.getDataPrevistaConclusao(), result.getDataPlanejada());
-        assertEquals(taskDto.getDiasPlanejados(), result.getDatasPlanejadas());
+        assertEquals(2, taskService.listAllTasks().size());
     }
 
     @Test
-    void testDeletarTarefa() {
-        // Mocking
+    public void testGetTaskById() {
         Task task = new Task();
         task.setId(1L);
+        task.setDescription("Test Task");
+
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+
+        assertEquals(task, taskService.getTaskById(1L).get());
+    }
+
+    @Test
+    public void testSaveTask() {
+        Task task = new Task();
+        task.setDescription("Test Task");
+
+        when(taskRepository.save(task)).thenReturn(task);
+
+        assertEquals(task, taskService.saveTask(task));
+    }
+
+    @Test
+    public void testDeleteTask() {
         doNothing().when(taskRepository).deleteById(1L);
 
-        // Test
-        taskService.deletar(1L);
+        taskService.deleteTask(1L);
 
-        // Verification
         verify(taskRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    void testConcluirTarefa() {
-        // Mocking
+    public void testUpdateTask() {
+        Task existingTask = new Task();
+        existingTask.setDescription("Existing Task");
+
+        Task updatedTask = new Task();
+        updatedTask.setDescription("Updated Task");
+
+        when(taskRepository.save(existingTask)).thenReturn(updatedTask);
+
+        assertEquals(updatedTask, taskService.updateTask(existingTask, updatedTask));
+    }
+
+    @Test
+    public void testCompleteTask() {
         Task task = new Task();
-        task.setId(1L);
-        task.setFinalizado(false);
+        task.setCompleted(false);
 
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskRepository.save(any(Task.class))).thenAnswer(i -> {
-            Task savedTask = (Task) i.getArguments()[0];
-            savedTask.setFinalizado(true);
-            return savedTask;
-        });
+        Task completedTask = new Task();
+        completedTask.setCompleted(true);
 
-        // Test
-        Task result = taskService.marcarTarefaConcluida(1L);
+        when(taskRepository.save(task)).thenReturn(completedTask);
 
-        // Verification
-        assertEquals(task.getId(), result.getId());
-        assertTrue(result.getFinalizado());
+        assertEquals(completedTask, taskService.completeTask(task));
+    }
+
+    @Test
+    public void testCalculateStatus() {
+        Task task = new Task();
+        task.setCompleted(true);
+        assertEquals("Concluída", taskService.calculateStatus(task));
+
+        task.setCompleted(false);
+        task.setType(Task.TaskType.DATA);
+        task.setDueDate(LocalDate.now().minusDays(1));
+        assertEquals("X dias de atraso", taskService.calculateStatus(task));
+
+        task.setDueDate(LocalDate.now().plusDays(1));
+        assertEquals("Prevista", taskService.calculateStatus(task));
+
+        task.setType(Task.TaskType.PRAZO);
+        task.setDueInDays(-1);
+        assertEquals("X dias de atraso", taskService.calculateStatus(task));
+
+        task.setDueInDays(1);
+        assertEquals("Prevista", taskService.calculateStatus(task));
+
+        task.setType(Task.TaskType.LIVRE);
+        assertEquals("Prevista", taskService.calculateStatus(task));
+
+        task.setType(null);
+        assertEquals("Indefinido", taskService.calculateStatus(task));
+    }
+
+    @Test
+    public void testValidateTaskDate() {
+        assertEquals(true, taskService.validateTaskDate(LocalDate.now().plusDays(1)));
+        assertEquals(false, taskService.validateTaskDate(LocalDate.now().minusDays(1)));
     }
 }

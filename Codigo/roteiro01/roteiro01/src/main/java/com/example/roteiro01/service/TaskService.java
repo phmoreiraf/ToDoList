@@ -1,101 +1,83 @@
 package com.example.roteiro01.service;
 
-import com.example.roteiro01.dto.TaskAtualizarDTO;
-import com.example.roteiro01.dto.TaskCriarDataDTO;
-import com.example.roteiro01.dto.TaskCriarPrazoDTO;
 import com.example.roteiro01.entity.Task;
-import com.example.roteiro01.entity.TaskType;
 import com.example.roteiro01.repository.TaskRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 
 @Service
-@RequiredArgsConstructor
 public class TaskService {
 
-    private final TaskRepository taskRepository;
+    @Autowired
+    private TaskRepository taskRepository;
 
-    @Operation(summary = "Lista todas as tarefas da lista")
-    public List<Task> findAll() {
+    public List<Task> listAllTasks() {
         return taskRepository.findAll();
     }
 
-    @Operation(summary = "Cria uma nova tarefa passando somente a descrição")
-    public Task criar(String descricao) {
-        Task novaTask = new Task(descricao);
-        return taskRepository.save(novaTask);
+    public Optional<Task> getTaskById(Long id) {
+        return taskRepository.findById(id);
     }
 
-    @Operation(summary = "Cria uma nova tarefa do tipoTask DATA, recebendo os dados do TaskCreateDataDTO")
-    public Task criarDataTask(TaskCriarDataDTO taskDto) {
-        if (taskDto.getDescricao() == null || taskDto.getDescricao().isEmpty()) {
-            throw new IllegalArgumentException("A descrição da tarefa é obrigatória");
-        }
-
-        LocalDate dataPlanejada = taskDto.getDataPrevistaConclusao();
-        if (dataPlanejada == null || dataPlanejada.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("A data prevista de conclusão deve ser no presente ou no futuro");
-        }
-
-        Task novaTask = new Task(taskDto.getDescricao(), TaskType.DATA, taskDto.getPrioridade(), dataPlanejada);
-
-        return taskRepository.save(novaTask);
-    }
-
-    @Operation(summary = "Cria uma nova tarefa do tipoTask PRAZO, recebendo os dados do TaskCreatePrazoDTO")
-    public Task criarPrazoTask(TaskCriarPrazoDTO taskDto) {
-        if (taskDto.getDescricao() == null || taskDto.getDescricao().isEmpty()) {
-            throw new IllegalArgumentException("A descrição da tarefa é obrigatória");
-        }
-
-        Integer plannedDays = taskDto.getDiasPlanejados();
-        if (plannedDays == null || plannedDays <= 0) {
-            throw new IllegalArgumentException("O prazo previsto de conclusão deve ser um número positivo");
-        }
-
-        Task novaTask = new Task(taskDto.getDescricao(), TaskType.PRAZO, taskDto.getPrioridade(), plannedDays);
-
-        return taskRepository.save(novaTask);
-    }
-
-    @Operation(summary = "Atualiza uma tarefa existente")
-    public Task atualizarTarefa(Long id, TaskAtualizarDTO taskDto) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
-
-        if (taskDto.getDescricao() != null && !taskDto.getDescricao().isEmpty()) {
-            task.setDescricao(taskDto.getDescricao());
-        }
-
-        if (taskDto.getDataPrevistaConclusao() != null && !taskDto.getDataPrevistaConclusao().isBefore(LocalDate.now())) {
-            task.setDataPlanejada(taskDto.getDataPrevistaConclusao());
-        }
-
-        if (taskDto.getPrioridade() != null) {
-            task.setPriority(taskDto.getPrioridade());
-        }
-
-        if (taskDto.getDiasPlanejados() != null && taskDto.getDiasPlanejados() > 0) {
-            task.setDatasPlanejadas(taskDto.getDiasPlanejados());
-        }
-
+    public Task saveTask(Task task) {
         return taskRepository.save(task);
     }
 
-    @Operation(summary = "Marca uma tarefa, cuja ID foi passada, como concluída")
-    public Task marcarTarefaConcluida(Long id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
-        task.setFinalizado(true);
-        return taskRepository.save(task);
-    }
-
-    @Operation(summary = "Deleta a tarefa de acordo com o ID passado")
-    public void deletar(Long id) {
+    public void deleteTask(Long id) {
         taskRepository.deleteById(id);
+    }
+
+    public Task updateTask(Task existingTask, Task updatedTask) {
+        existingTask.setDescription(updatedTask.getDescription());
+        existingTask.setCompleted(updatedTask.getCompleted());
+        existingTask.setType(updatedTask.getType());
+        existingTask.setPriority(updatedTask.getPriority());
+        existingTask.setDueDate(updatedTask.getDueDate());
+        existingTask.setDueInDays(updatedTask.getDueInDays());
+        return taskRepository.save(existingTask);
+    }
+
+    public Task completeTask(Task task) {
+        task.setCompleted(true);
+        return taskRepository.save(task);
+    }
+
+    public String calculateStatus(Task task) {
+        if (task.getCompleted() != null && task.getCompleted()) {
+            return "Concluída";
+        }
+        Task.TaskType type = task.getType();
+        if (type == null) {
+            return "Tipo de tarefa não definido";  // Ou algum tratamento de erro adequado
+        }
+        switch (type) {
+            case DATA:
+                if (task.getDueDate() != null) {
+                    return task.getDueDate().isBefore(LocalDate.now()) ?
+                            "X dias de atraso" : "Prevista";
+                }
+                break;
+            case PRAZO:
+                if (task.getDueInDays() != null) {
+                    LocalDate dueDate = LocalDate.now().plusDays(task.getDueInDays());
+                    return dueDate.isBefore(LocalDate.now()) ?
+                            "X dias de atraso" : "Prevista";
+                }
+                break;
+            case LIVRE:
+                return "Prevista";
+            default:
+                break;
+        }
+        return "Indefinido";
+    }
+
+    public boolean validateTaskDate(LocalDate dueDate) {
+        return !dueDate.isBefore(LocalDate.now());
     }
 }

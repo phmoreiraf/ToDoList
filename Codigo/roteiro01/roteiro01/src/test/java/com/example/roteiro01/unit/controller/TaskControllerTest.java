@@ -1,10 +1,8 @@
 package com.example.roteiro01.unit.controller;
 
-import com.example.roteiro01.controller.TaskController;
-import com.example.roteiro01.dto.TaskAtualizarDTO;
-import com.example.roteiro01.dto.TaskCriarDTO;
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.service.TaskService;
+import com.example.roteiro01.controller.TaskController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -12,16 +10,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-
-import java.util.ArrayList;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TaskControllerTest {
 
@@ -37,82 +33,98 @@ public class TaskControllerTest {
     }
 
     @Test
-    void testListAll() {
-        // Mocking
-        List<Task> tasks = new ArrayList<>();
+    public void testListAllTasks() {
         Task task1 = new Task();
-        task1.setId(1L);
-        task1.setDescricao("Tarefa 1");
-        tasks.add(task1);
-
+        task1.setDescription("Test Task 1");
         Task task2 = new Task();
-        task2.setId(2L);
-        task2.setDescricao("Tarefa 2");
-        tasks.add(task2);
+        task2.setDescription("Test Task 2");
 
-        when(taskService.findAll()).thenReturn(tasks);
+        when(taskService.listAllTasks()).thenReturn(Arrays.asList(task1, task2));
 
-        // Test
         ResponseEntity<List<Task>> response = taskController.listAll();
-
-        // Verification
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(tasks, response.getBody());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test
-    void testCriar() {
-        // Mocking
+    public void testAddTask() {
         Task task = new Task();
-        task.setId(1L);
-        when(taskService.criar(any(String.class))).thenReturn(task);
+        task.setDescription("Test Task");
 
-        // Test
-        TaskCriarDTO taskDto = new TaskCriarDTO();
-        taskDto.setDescricao("Nova tarefa");
-        ResponseEntity<Task> response = taskController.criar(taskDto);
+        when(taskService.saveTask(task)).thenReturn(task);
 
-        // Verification
+        ResponseEntity<?> response = taskController.addTask(task);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(task, response.getBody());
     }
 
     @Test
-    void testAtualizarTarefa() {
-        // Mocking
+    public void testAddTaskWithInvalidDate() {
         Task task = new Task();
-        task.setId(1L);
-        TaskAtualizarDTO taskDto = new TaskAtualizarDTO();
-        when(taskService.atualizarTarefa(eq(1L), any(TaskAtualizarDTO.class))).thenReturn(task);
+        task.setType(Task.TaskType.DATA);
+        task.setDueDate(LocalDate.of(2020, 1, 1));
 
-        // Test
-        ResponseEntity<Task> response = taskController.atualizarTarefa(1L, taskDto);
-
-        // Verification
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(task, response.getBody());
+        ResponseEntity<?> response = taskController.addTask(task);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Data de execução deve ser igual ou superior a data atual.", response.getBody());
     }
 
     @Test
-    void testDeletar() {
-        // Test
-        taskController.deletar(1L);
+    public void testUpdateTask() {
+        Task existingTask = new Task();
+        existingTask.setId(1L);
+        Task updatedTask = new Task();
+        updatedTask.setDescription("Updated Task");
 
-        // Verification
-        verify(taskService, times(1)).deletar(1L);
+        when(taskService.getTaskById(1L)).thenReturn(Optional.of(existingTask));
+        when(taskService.updateTask(existingTask, updatedTask)).thenReturn(updatedTask);
+
+        ResponseEntity<?> response = taskController.updateTask(1L, updatedTask);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(updatedTask, response.getBody());
     }
+
     @Test
-    void testMarcarTarefaConcluida() {
-        // Mocking
+    public void testUpdateNonExistingTask() {
+        Task updatedTask = new Task();
+        updatedTask.setDescription("Updated Task");
+
+        when(taskService.getTaskById(1L)).thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = taskController.updateTask(1L, updatedTask);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteTask() {
+        doNothing().when(taskService).deleteTask(1L);
+
+        ResponseEntity<HttpStatus> response = taskController.deleteTask(1L);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    public void testCompleteTask() {
         Task task = new Task();
         task.setId(1L);
-        when(taskService.marcarTarefaConcluida(1L)).thenReturn(task);
+        task.setCompleted(false);
 
-        // Test
-        ResponseEntity<Task> response = taskController.marcarTarefaConcluida(1L);
+        Task completedTask = new Task();
+        completedTask.setCompleted(true);
 
-        // Verification
+        when(taskService.getTaskById(1L)).thenReturn(Optional.of(task));
+        when(taskService.completeTask(task)).thenReturn(completedTask);
+
+        ResponseEntity<?> response = taskController.completeTask(1L);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(task, response.getBody());
+        assertEquals(completedTask, response.getBody());
+    }
+
+    @Test
+    public void testCompleteNonExistingTask() {
+        when(taskService.getTaskById(1L)).thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = taskController.completeTask(1L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }

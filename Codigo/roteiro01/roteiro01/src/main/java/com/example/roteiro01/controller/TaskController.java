@@ -1,111 +1,75 @@
 package com.example.roteiro01.controller;
 
-import com.example.roteiro01.dto.TaskAtualizarDTO;
-import com.example.roteiro01.dto.TaskCriarDTO;
-import com.example.roteiro01.dto.TaskCriarDataDTO;
-import com.example.roteiro01.dto.TaskCriarPrazoDTO;
+
 import com.example.roteiro01.entity.Task;
 import com.example.roteiro01.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-
-import java.util.ArrayList;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/task")
-@RequiredArgsConstructor
-@EnableWebMvc
+@CrossOrigin(origins = "*")
 public class TaskController {
 
-    public TaskService taskService;
+    @Autowired
+    private TaskService taskService;
 
-    @Operation(description = "Lista todas as tarefas da lista")
-    @GetMapping()
+    @GetMapping("/task")
+    @Operation(summary = "Lista todas as tarefas da lista")
     public ResponseEntity<List<Task>> listAll() {
-        try {
-            List<Task> taskList = new ArrayList<Task>();
-            taskService.findAll().forEach(taskList::add);
-            if (taskList.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(taskList, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        List<Task> tasks = taskService.listAllTasks();
+        if (tasks.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+        tasks.forEach(task -> task.setDescription(task.getDescription() + " - Status: " + taskService.calculateStatus(task)));
+        return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
-    @Operation(description = "Cria uma nova tarefa passando somente a descrição")
-    @PostMapping()
-    public ResponseEntity<Task> criar(@RequestBody TaskCriarDTO taskDto) {
-        try {
-            Task taskCriada = taskService.criar(taskDto.getDescricao());
-            return new ResponseEntity<>(taskCriada, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    @PostMapping("/task")
+    @Operation(summary = "Adiciona uma nova tarefa")
+    public ResponseEntity<?> addTask(@Valid @RequestBody Task task) {
+        if (task.getType() == Task.TaskType.DATA && task.getDueDate() != null && !taskService.validateTaskDate(task.getDueDate())) {
+            return new ResponseEntity<>("Data de execução deve ser igual ou superior a data atual.", HttpStatus.BAD_REQUEST);
         }
+        Task savedTask = taskService.saveTask(task);
+        return new ResponseEntity<>(savedTask, HttpStatus.CREATED);
     }
 
-    @PostMapping("/create/data")
-    public ResponseEntity<Task> criarDataTask(@RequestBody TaskCriarDataDTO taskDto) {
-        try {
-            Task taskCriada = taskService.criarDataTask(taskDto);
-            return new ResponseEntity<>(taskCriada, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PutMapping("/task/{id}")
+    @Operation(summary = "Altera uma tarefa existente")
+    public ResponseEntity<?> updateTask(@PathVariable("id") long id, @Valid @RequestBody Task task) {
+        return taskService.getTaskById(id)
+                .map(existingTask -> {
+                    if (task.getType() == Task.TaskType.DATA && task.getDueDate() != null && !taskService.validateTaskDate(task.getDueDate())) {
+                        return new ResponseEntity<>("Data de execução deve ser igual ou superior a data atual.", HttpStatus.BAD_REQUEST);
+                    }
+                    Task updatedTask = taskService.updateTask(existingTask, task);
+                    return new ResponseEntity<>(updatedTask, HttpStatus.OK);
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/create/prazo")
-    public ResponseEntity<Task> criarPrazoTask(@RequestBody TaskCriarPrazoDTO taskDto) {
-        try {
-            Task taskCriada = taskService.criarPrazoTask(taskDto);
-            return new ResponseEntity<>(taskCriada, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @DeleteMapping("/task/{id}")
+    @Operation(summary = "Exclui uma tarefa existente")
+    public ResponseEntity<HttpStatus> deleteTask(@PathVariable("id") long id) {
+        taskService.deleteTask(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @Operation(description = "Marca a tarefa, cuja ID foi passado, como concluída")
-    @PatchMapping("/{id}")
-    public ResponseEntity<Task> marcarTarefaConcluida(@PathVariable Long id) {
-        try {
-            Task updatedTask = taskService.marcarTarefaConcluida(id);
-            return new ResponseEntity<>(updatedTask, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Operation(description =  "Atualiza uma tarefa existente")
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> atualizarTarefa(@PathVariable Long id, @Valid @RequestBody TaskAtualizarDTO taskDto) {
-        try {
-            Task updatedTask = taskService.atualizarTarefa(id, taskDto);
-            return new ResponseEntity<>(updatedTask, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Operation(description = "Deleta a tarefa, cuja ID foi passado")
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        try {
-            taskService.deletar(id);
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
+    @PutMapping("/task/{id}/complete")
+    @Operation(summary = "Conclui uma tarefa")
+    public ResponseEntity<?> completeTask(@PathVariable("id") long id) {
+        return taskService.getTaskById(id)
+                .map(task -> {
+                    Task completedTask = taskService.completeTask(task);
+                    return new ResponseEntity<>(completedTask, HttpStatus.OK);
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

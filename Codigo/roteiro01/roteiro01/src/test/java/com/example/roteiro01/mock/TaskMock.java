@@ -14,11 +14,11 @@ public class TaskMock {
         List<Task> taskList = new ArrayList<>();
         Task task1 = new Task();
         task1.setId(1L);
-        task1.setDescricao("Tarefa 1");
+        task1.setDescription("Tarefa 1");
 
         Task task2 = new Task();
         task2.setId(2L);
-        task2.setDescricao("Tarefa 2");
+        task2.setDescription("Tarefa 2");
 
         taskList.add(task1);
         taskList.add(task2);
