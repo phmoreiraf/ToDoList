@@ -24,7 +24,7 @@ public class Task {
     private Long id;
 
     @Schema(name = "description")
-    @Size(min = 10, message = "Descrição da tarefa deve possuir pelo menos 10 caracteres")
+    @Size(min = 20, message = "Descrição da tarefa deve possuir pelo menos 20(vinte) caracteres")
     private String description;
 
     private Boolean completed = false;
