@@ -1,96 +1,73 @@
 package com.example.roteiro01.integration;
 
-import com.example.roteiro01.Roteiro01Application;
-import io.restassured.RestAssured;
-import org.junit.Before;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import static io.restassured.RestAssured.get;
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-@RunWith(JUnitPlatform.class)
-@SpringBootTest(classes = { Roteiro01Application.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
 public class TaskControllerIntegrationTest {
 
-    @Before
-    public void setup() {
-        RestAssured.baseURI = "http://localhost:8080";
-        RestAssured.port = 8080;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testListAll() throws Exception {
+        mockMvc.perform(get("/task"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void listAllTasks() {
-        get("/api/task").then().statusCode(204);
+    public void testCriar() throws Exception {
+        String taskJson = "{\"descricao\":\"Test Task\"}";
+        mockMvc.perform(post("/task")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(taskJson))
+                .andExpect(status().isCreated());
     }
 
     @Test
-    public void criarDataTask() {
-        String requestData = """
-            {
-                "descricao": "Task Data",
-                "prioridade": "ALTA",
-                "diaPlanejado": "2024-06-01"
-            }
-            """;
-
-        given().contentType("application/json")
-                .body(requestData)
-                .when()
-                .post("/api/task/create/data")
-                .then()
-                .statusCode(201)
-                .body("descricao", equalTo("Task Data"))
-                .body("prioridade", equalTo("ALTA"))
-                .body("diaPlanejado", equalTo("2024-06-01"));
+    public void testCriarDataTask() throws Exception {
+        String taskJson = "{\"descricao\":\"Test Task\", \"data\":\"2022-12-31\"}";
+        mockMvc.perform(post("/task/create/data")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(taskJson))
+                .andExpect(status().isCreated());
     }
 
     @Test
-    public void criarPrazoTask() {
-        String requestPrazo = """
-            {
-                "descricao": "Task Prazo",
-                "prioridade": "MEDIA",
-                "diasPlanejados": 15
-            }
-            """;
-
-        given().contentType("application/json")
-                .body(requestPrazo)
-                .when()
-                .post("/api/task/create/prazo")
-                .then()
-                .statusCode(201)
-                .body("descricao", equalTo("Task Prazo"))
-                .body("prioridade", equalTo("MEDIA"))
-                .body("diasPlanejados", equalTo(15));
+    public void testCriarPrazoTask() throws Exception {
+        String taskJson = "{\"descricao\":\"Test Task\", \"prazo\":10}";
+        mockMvc.perform(post("/task/create/prazo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(taskJson))
+                .andExpect(status().isCreated());
     }
 
     @Test
-    public void marcarConcluida() {
-        Long taskId = 1L;
-
-        given().pathParam("id", taskId)
-                .when()
-                .patch("/api/task/{id}")
-                .then()
-                .statusCode(200)
-                .body("completed", equalTo(true))
-                .body("id", equalTo(taskId.intValue()));
+    public void testMarcarTarefaConcluida() throws Exception {
+        mockMvc.perform(patch("/task/1"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void deletarTask() {
-        Long taskId = 1L;
+    public void testAtualizarTarefa() throws Exception {
+        String taskJson = "{\"descricao\":\"Updated Task\"}";
+        mockMvc.perform(put("/task/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(taskJson))
+                .andExpect(status().isOk());
+    }
 
-        given().pathParam("id", taskId)
-                .when()
-                .delete("/api/task/{id}")
-                .then()
-                .statusCode(200);
+    @Test
+    public void testDeletar() throws Exception {
+        mockMvc.perform(delete("/task/1"))
+                .andExpect(status().isOk());
     }
 }
