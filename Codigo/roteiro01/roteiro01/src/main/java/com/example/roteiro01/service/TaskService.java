@@ -17,14 +17,17 @@ public class TaskService {
     private TaskRepository taskRepository;
 
     public List<Task> listAllTasks() {
+
         return taskRepository.findAll();
     }
 
     public Optional<Task> getTaskById(Long id) {
+
         return taskRepository.findById(id);
     }
 
     public Task saveTask(Task task) {
+
         return taskRepository.save(task);
     }
 

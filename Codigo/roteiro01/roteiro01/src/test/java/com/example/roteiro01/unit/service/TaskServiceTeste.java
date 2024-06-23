@@ -99,7 +99,7 @@ public class TaskServiceTeste {
 
         assertEquals(completedTask, taskService.completeTask(task));
     }
-    
+
     @Test
     public void testValidateTaskDate() {
         assertEquals(true, taskService.validateTaskDate(LocalDate.now().plusDays(1)));
