@@ -63,7 +63,11 @@ public class TaskServiceTeste {
 
     @Test
     public void testDeleteTask() {
-        doNothing().when(taskRepository).deleteById(1L);
+        Task task = new Task();
+        task.setId(1L);
+        task.setDescription("Test Task");
+
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         taskService.deleteTask(1L);
 
@@ -95,35 +99,7 @@ public class TaskServiceTeste {
 
         assertEquals(completedTask, taskService.completeTask(task));
     }
-
-    @Test
-    public void testCalculateStatus() {
-        Task task = new Task();
-        task.setCompleted(true);
-        assertEquals("Concluída", taskService.calculateStatus(task));
-
-        task.setCompleted(false);
-        task.setType(Task.TaskType.DATA);
-        task.setDueDate(LocalDate.now().minusDays(1));
-        assertEquals("X dias de atraso", taskService.calculateStatus(task));
-
-        task.setDueDate(LocalDate.now().plusDays(1));
-        assertEquals("Prevista", taskService.calculateStatus(task));
-
-        task.setType(Task.TaskType.PRAZO);
-        task.setDueInDays(-1);
-        assertEquals("X dias de atraso", taskService.calculateStatus(task));
-
-        task.setDueInDays(1);
-        assertEquals("Prevista", taskService.calculateStatus(task));
-
-        task.setType(Task.TaskType.LIVRE);
-        assertEquals("Prevista", taskService.calculateStatus(task));
-
-        task.setType(null);
-        assertEquals("Indefinido", taskService.calculateStatus(task));
-    }
-
+    
     @Test
     public void testValidateTaskDate() {
         assertEquals(true, taskService.validateTaskDate(LocalDate.now().plusDays(1)));

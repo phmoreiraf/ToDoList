@@ -29,6 +29,12 @@ public class TaskService {
     }
 
     public void deleteTask(Long id) {
+        Optional<Task> task = taskRepository.findById(id);
+        if (!task.isPresent()) {
+            // Handle the error case here. You could log an error or simply return.
+            System.err.println("Task not found with id " + id);
+            return;
+        }
         taskRepository.deleteById(id);
     }
 

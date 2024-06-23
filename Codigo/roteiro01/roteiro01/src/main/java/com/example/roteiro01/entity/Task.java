@@ -45,7 +45,7 @@ public class Task {
     }
 
     public enum TaskType {
-        DATA, PRAZO, LIVRE
+        DATA, PRAZO, LIVRE, GENERIC
     }
 
     public enum Priority {
